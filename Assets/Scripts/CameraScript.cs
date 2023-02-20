@@ -8,34 +8,35 @@ public class CameraScript : MonoBehaviour
     // public
     
     // private
-    private GameObject player;
-    private Vector3 offset;
+    private GameObject _player;
+    private Vector3 _offset;
 
-    private Vector3 currPos;
-    private Vector3 desiredPos;
-    private Vector3 targetPos;
+    private Vector3 _desiredAngle;
+    private Vector3 _desiredPos;
+    private Vector3 _targetPos;
 
     void Start()
     {
-        player = GameObject.FindGameObjectWithTag("Player");
+        _player = GameObject.FindGameObjectWithTag("Player");
 
-        offset = new Vector3(0.0f, 3.0f, -3.0f);
-        targetPos = player.transform.position + new Vector3(0, 1.5f, 0);
-        transform.LookAt(targetPos);
+        _offset = new Vector3(0.0f, 3.0f, -3.0f);
+
+        _desiredAngle = new Vector3();
     }
     
     void FixedUpdate()
     {
-        currPos = transform.position;
+        var look = _player.GetComponent<PlayerController>().look;
+        
+        _desiredAngle.x = _player.transform.eulerAngles.x + look.y * 30;
+        _desiredAngle.y = _player.transform.eulerAngles.y;
 
-        float desiredAngle = player.transform.eulerAngles.y;
-        Quaternion rotation = Quaternion.Euler(0, desiredAngle, 0);
-        desiredPos = player.transform.position + (rotation * offset);
+        Quaternion rotation = Quaternion.Euler(_desiredAngle.x, _desiredAngle.y, 0);
+        _desiredPos = _player.transform.position + (rotation * _offset);
         
         // camera movement
-        currPos.x = Mathf.Lerp(transform.position.x, desiredPos.x, 10 * Time.deltaTime);
-        currPos.y = Mathf.Lerp(transform.position.y, desiredPos.y, 10 * Time.deltaTime);
-        currPos.z = Mathf.Lerp(transform.position.z, desiredPos.z, 10 * Time.deltaTime);
-        transform.position = currPos;
+        transform.position = _desiredPos;
+        _targetPos = _player.transform.position + new Vector3(0, 1.5f, 0);
+        transform.LookAt(_targetPos);
     }
 }

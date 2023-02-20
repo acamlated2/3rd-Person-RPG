@@ -214,6 +214,17 @@
                 },
                 {
                     "name": "",
+                    "id": "94f379d1-f8ae-4737-bc5e-ee5527cf84c7",
+                    "path": "<Mouse>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Look",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "8ef3c84f-6050-4d85-8e35-e292c0150d50",
                     "path": "<Gamepad>/buttonSouth",
                     "interactions": "",

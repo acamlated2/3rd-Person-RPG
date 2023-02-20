@@ -9,42 +9,48 @@ public class PlayerController : MonoBehaviour
     // public
     public float speed = 10;
     
+    public Vector2 look;
+    
     // private
-    private PlayerControls controls;
-    private Vector2 move;
+    private PlayerControls _controls;
+    private Vector2 _move;
 
     private void OnEnable()
     {
-        controls.Player.Enable();
+        _controls.Player.Enable();
     }
 
     private void OnDisable()
     {
-        controls.Player.Disable();
+        _controls.Player.Disable();
     }
 
     void Awake()
     {
-        controls = new PlayerControls();
-        controls.Player.Move.performed += ctx => move =
-            ctx.ReadValue<Vector2>();
-        controls.Player.Move.canceled += ctx => move = Vector2.zero;
-    }
-
-    void SendMessage(Vector2 coordinates)
-    {
-        Debug.Log("thumb stick coords = " + coordinates);
-    }
-
-    private void OnMove(InputValue movementValue)
-    {
+        _controls = new PlayerControls();
         
+        _controls.Player.Move.performed += ctx => _move = ctx.ReadValue<Vector2>();
+        _controls.Player.Move.canceled += ctx => _move = Vector2.zero;
+
+        _controls.Player.Look.performed += ctx => look = ctx.ReadValue<Vector2>();
+        _controls.Player.Look.canceled += ctx => look = Vector2.zero;
     }
 
     private void FixedUpdate()
     {
-        Vector3 movement = new Vector3(move.x, 0.0f, move.y) * speed * Time.deltaTime;
-        transform.Translate(movement, Space.World);
+        // movement
+        Vector3 movement = new Vector3(_move.x, 0.0f, _move.y) * speed * Time.deltaTime;
+        transform.Translate(movement, Space.Self);
+        
+        // rotation
+        if (look.x > 0.3)
+        {
+            transform.Rotate(new Vector3(0, 5, 0));
+        }
+        else if (look.x < -0.3)
+        {
+            transform.Rotate(new Vector3(0, -5, 0));
+        }
     }
 
     void Update()
