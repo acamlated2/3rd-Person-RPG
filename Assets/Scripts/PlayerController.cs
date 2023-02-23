@@ -13,6 +13,8 @@ public class PlayerController : MonoBehaviour
     
     public Vector2 look;
 
+    public bool poweredUp = false;
+
     // private
     private PlayerControls _controls;
     private Vector2 _move;
@@ -20,6 +22,9 @@ public class PlayerController : MonoBehaviour
     
     private GameObject _cameraManager;
     private GameObject _camera;
+
+    private float _powerUpTime = 0;
+    private float _powerUpTimeDefault = 5;
 
     private void OnEnable()
     {
@@ -51,13 +56,8 @@ public class PlayerController : MonoBehaviour
         HandleRotation();
         HandleMovement();
         
-        //Vector3 movement = new Vector3(_move.x, 0.0f, _move.y) * movementSpeed * Time.deltaTime;
-        //transform.Translate(movement, Space.Self);
-        
-        // camera
-        //cameraInputX = look.x;
-        //cameraInputY = look.y;
-
+        // power up
+        HandlePowerUp();
     }
 
     private void HandleMovement()
@@ -92,6 +92,22 @@ public class PlayerController : MonoBehaviour
 
     private void LateUpdate()
     {
+        // camera
         _cameraManager.GetComponent<CameraScript>().HandleCamera(look);
+    }
+
+    private void HandlePowerUp()
+    {
+        if (poweredUp)
+        {
+            _powerUpTime -= 1 * Time.deltaTime;
+            Debug.Log(_powerUpTime);
+        }
+    }
+
+    public void StartPowerUp()
+    {
+        poweredUp = true;
+        _powerUpTime = _powerUpTimeDefault;
     }
 }
