@@ -13,18 +13,29 @@ public class PlayerController : MonoBehaviour
     
     public Vector2 look;
 
-    public bool poweredUp = false;
+    public bool speedBoosted = false;
 
     // private
     private PlayerControls _controls;
     private Vector2 _move;
     private Vector3 _moveDirection;
+
+    private float _moveAmount;
     
     private GameObject _cameraManager;
     private GameObject _camera;
 
-    private float _powerUpTime = 0;
-    private float _powerUpTimeDefault = 5;
+    private GameObject[] _speedBoosts;
+    private GameObject[] _doubleJumps;
+
+    private float _speedBoostTime = 0;
+    private float _speedBoostTimeDefault = 5;
+    private float _speedBoostMultiplier = 1;
+
+    private bool _jump;
+    private float _jumpMultiplier = 6;
+
+    private AnimatorManager _animatorManager;
 
     private void OnEnable()
     {
@@ -46,8 +57,16 @@ public class PlayerController : MonoBehaviour
         _controls.Player.Look.performed += ctx => look = ctx.ReadValue<Vector2>();
         _controls.Player.Look.canceled += ctx => look = Vector2.zero;
 
+        _controls.Player.Jump.performed += ctx => _jump = true;
+        _controls.Player.Jump.canceled += ctx => _jump = false;
+
         _cameraManager = GameObject.FindGameObjectWithTag("Camera Manager");
         _camera = GameObject.FindGameObjectWithTag("MainCamera");
+
+        _animatorManager = GetComponent<AnimatorManager>();
+
+        _speedBoosts = GameObject.FindGameObjectsWithTag("PU Speed Boost");
+        _doubleJumps = GameObject.FindGameObjectsWithTag("PU Double Jump");
     }
 
     private void FixedUpdate()
@@ -55,6 +74,10 @@ public class PlayerController : MonoBehaviour
         // movement
         HandleRotation();
         HandleMovement();
+        HandleJump();
+        
+        // animation
+        HandleAnimation();
         
         // power up
         HandlePowerUp();
@@ -67,8 +90,8 @@ public class PlayerController : MonoBehaviour
         _moveDirection.Normalize();
         _moveDirection.y = 0;
 
-        Vector3 movementVelocity = _moveDirection * movementSpeed;
-        GetComponent<Rigidbody>().velocity = movementVelocity;
+        Vector3 movementVelocity = _moveDirection * movementSpeed * _speedBoostMultiplier;
+        transform.Translate(movementVelocity * Time.deltaTime, Space.World);
     }
 
     private void HandleRotation()
@@ -98,16 +121,68 @@ public class PlayerController : MonoBehaviour
 
     private void HandlePowerUp()
     {
-        if (poweredUp)
+        // detect power ups
+        for (int i = 0; i < _speedBoosts.Length; i++)
         {
-            _powerUpTime -= 1 * Time.deltaTime;
-            Debug.Log(_powerUpTime);
+            if (_speedBoosts[i].GetComponent<PowerUpScript>().collided)
+            {
+                StartSpeedBoostPowerUp();
+            }
+        }
+
+        for (int i = 0; i < _doubleJumps.Length; i++)
+        {
+            if (_doubleJumps[i].GetComponent<PowerUpScript>().collided)
+            {
+                StartDoubleJumpPowerUp();
+            }
+        }
+        
+        // speed boost
+        if (speedBoosted)
+        {
+            _speedBoostTime -= 1 * Time.deltaTime;
+
+            if (_speedBoostTime <= 0)
+            {
+                speedBoosted = false;
+                _speedBoostMultiplier = 1;
+            }
         }
     }
 
-    public void StartPowerUp()
+    public void StartSpeedBoostPowerUp()
     {
-        poweredUp = true;
-        _powerUpTime = _powerUpTimeDefault;
+        speedBoosted = true;
+        _speedBoostTime = _speedBoostTimeDefault;
+        _speedBoostMultiplier = 2;
+    }
+
+    private void StartDoubleJumpPowerUp()
+    {
+        
+    }
+
+    private void HandleJump()
+    {
+        if (_jump)
+        {
+            Jumping();
+            _jump = false;
+        }
+    }
+
+    private void Jumping()
+    {
+        Vector3 jumpVelocity = new Vector3(0, 1, 0);
+
+        jumpVelocity.y = jumpVelocity.y * _jumpMultiplier;
+        GetComponent<Rigidbody>().velocity += jumpVelocity;
+    }
+
+    private void HandleAnimation()
+    {
+        //_moveAmount = Mathf.Clamp01(Mathf.Abs(_move.x) + Mathf.Abs(_move.y));
+        _animatorManager.HandleAnimator(_move);
     }
 }
