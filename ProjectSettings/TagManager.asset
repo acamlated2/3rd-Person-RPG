@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Camera Manager
   - Camera Pivot
+  - PU Speed Boost
+  - PU Double Jump
   layers:
   - Default
   - TransparentFX

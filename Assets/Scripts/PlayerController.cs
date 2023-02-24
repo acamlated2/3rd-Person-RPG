@@ -14,6 +14,7 @@ public class PlayerController : MonoBehaviour
     public Vector2 look;
 
     public bool speedBoosted = false;
+    public bool _doubleJumpOn = false;
 
     // private
     private PlayerControls _controls;
@@ -32,8 +33,13 @@ public class PlayerController : MonoBehaviour
     private float _speedBoostTimeDefault = 5;
     private float _speedBoostMultiplier = 1;
 
-    private bool _jump;
+    private bool _jumpInput;
     private float _jumpMultiplier = 6;
+    private bool _jumping;
+
+    private bool _doubleJumpUsed = false;
+    private float _doubleJumpTime = 0;
+    private float _doubleJumpTimeDefault = 5;
 
     private AnimatorManager _animatorManager;
 
@@ -57,8 +63,8 @@ public class PlayerController : MonoBehaviour
         _controls.Player.Look.performed += ctx => look = ctx.ReadValue<Vector2>();
         _controls.Player.Look.canceled += ctx => look = Vector2.zero;
 
-        _controls.Player.Jump.performed += ctx => _jump = true;
-        _controls.Player.Jump.canceled += ctx => _jump = false;
+        _controls.Player.Jump.performed += ctx => _jumpInput = true;
+        _controls.Player.Jump.canceled += ctx => _jumpInput = false;
 
         _cameraManager = GameObject.FindGameObjectWithTag("Camera Manager");
         _camera = GameObject.FindGameObjectWithTag("MainCamera");
@@ -149,6 +155,16 @@ public class PlayerController : MonoBehaviour
                 _speedBoostMultiplier = 1;
             }
         }
+
+        if (_doubleJumpOn)
+        {
+            _doubleJumpTime -= 1 * Time.deltaTime;
+
+            if (_doubleJumpTime <= 0)
+            {
+                _doubleJumpOn = false;
+            }
+        }
     }
 
     public void StartSpeedBoostPowerUp()
@@ -160,20 +176,37 @@ public class PlayerController : MonoBehaviour
 
     private void StartDoubleJumpPowerUp()
     {
-        
+        _doubleJumpOn = true;
+        _doubleJumpTime = _doubleJumpTimeDefault;
     }
 
     private void HandleJump()
     {
-        if (_jump)
+        if (GetComponent<Rigidbody>().velocity.y == 0)
         {
-            Jumping();
-            _jump = false;
+            _jumping = false;
+            _doubleJumpUsed = false;
+        }
+        
+        if (_jumpInput)
+        {
+            if (_jumping && _doubleJumpOn && !_doubleJumpUsed)
+            {
+                StartJumping();
+                _doubleJumpUsed = true;
+            }
+            
+            if (GetComponent<Rigidbody>().velocity.y == 0)
+            {
+                StartJumping();
+            }
         }
     }
 
-    private void Jumping()
+    private void StartJumping()
     {
+        _jumping = true;
+        _jumpInput = false;
         Vector3 jumpVelocity = new Vector3(0, 1, 0);
 
         jumpVelocity.y = jumpVelocity.y * _jumpMultiplier;
