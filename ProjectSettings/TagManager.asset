@@ -8,6 +8,8 @@ TagManager:
   - Camera Pivot
   - PU Speed Boost
   - PU Double Jump
+  - Interaction Collider
+  - Interactable
   layers:
   - Default
   - TransparentFX

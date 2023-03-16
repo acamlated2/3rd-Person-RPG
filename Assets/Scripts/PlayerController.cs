@@ -14,7 +14,9 @@ public class PlayerController : MonoBehaviour
     public Vector2 look;
 
     public bool speedBoosted = false;
-    public bool _doubleJumpOn = false;
+    public bool doubleJumpOn = false;
+    public bool jumping;
+    public bool interacting;
 
     // private
     private PlayerControls _controls;
@@ -35,11 +37,12 @@ public class PlayerController : MonoBehaviour
 
     private bool _jumpInput;
     private float _jumpMultiplier = 6;
-    private bool _jumping;
 
     private bool _doubleJumpUsed = false;
     private float _doubleJumpTime = 0;
     private float _doubleJumpTimeDefault = 5;
+
+    private bool _interactinput;
 
     private AnimatorManager _animatorManager;
 
@@ -66,6 +69,9 @@ public class PlayerController : MonoBehaviour
         _controls.Player.Jump.performed += ctx => _jumpInput = true;
         _controls.Player.Jump.canceled += ctx => _jumpInput = false;
 
+        _controls.Player.Interact.performed += ctx => _interactinput = true;
+        _controls.Player.Jump.canceled += ctx => _jumpInput = false;
+
         _cameraManager = GameObject.FindGameObjectWithTag("Camera Manager");
         _camera = GameObject.FindGameObjectWithTag("MainCamera");
 
@@ -87,6 +93,12 @@ public class PlayerController : MonoBehaviour
         
         // power up
         HandlePowerUp();
+        
+        // interaction
+        if (_interactinput)
+        {
+            StartInteracting();
+        }
     }
 
     private void HandleMovement()
@@ -156,13 +168,13 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        if (_doubleJumpOn)
+        if (doubleJumpOn)
         {
             _doubleJumpTime -= 1 * Time.deltaTime;
 
             if (_doubleJumpTime <= 0)
             {
-                _doubleJumpOn = false;
+                doubleJumpOn = false;
             }
         }
     }
@@ -176,21 +188,24 @@ public class PlayerController : MonoBehaviour
 
     private void StartDoubleJumpPowerUp()
     {
-        _doubleJumpOn = true;
+        doubleJumpOn = true;
         _doubleJumpTime = _doubleJumpTimeDefault;
     }
 
     private void HandleJump()
     {
-        if (GetComponent<Rigidbody>().velocity.y == 0)
+        if (jumping)
         {
-            _jumping = false;
-            _doubleJumpUsed = false;
+            if (GetComponent<Rigidbody>().velocity.y == 0)
+            {
+                jumping = false;
+                _doubleJumpUsed = false;
+            }
         }
         
         if (_jumpInput)
         {
-            if (_jumping && _doubleJumpOn && !_doubleJumpUsed)
+            if (jumping && doubleJumpOn && !_doubleJumpUsed)
             {
                 StartJumping();
                 _doubleJumpUsed = true;
@@ -205,17 +220,26 @@ public class PlayerController : MonoBehaviour
 
     private void StartJumping()
     {
-        _jumping = true;
+        jumping = true;
         _jumpInput = false;
         Vector3 jumpVelocity = new Vector3(0, 1, 0);
 
         jumpVelocity.y = jumpVelocity.y * _jumpMultiplier;
         GetComponent<Rigidbody>().velocity += jumpVelocity;
+        _animatorManager.Jump();
+        ;
     }
 
     private void HandleAnimation()
     {
         //_moveAmount = Mathf.Clamp01(Mathf.Abs(_move.x) + Mathf.Abs(_move.y));
-        _animatorManager.HandleAnimator(_move);
+        _animatorManager.HandleAnimator(_move, GetComponent<Rigidbody>().velocity.y);
+    }
+
+    private void StartInteracting()
+    {
+        _interactinput = false;
+        _animatorManager.Interact();
+        interacting = true;
     }
 }

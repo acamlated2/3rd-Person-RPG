@@ -20,7 +20,7 @@ public class CameraScript : MonoBehaviour
     
     private PlayerInputManager _playerInputManager;
 
-    private float _cameraRotateSpeed = 0.8f;
+    private float _cameraRotateSpeed = 2.5f;
     
     private float _rotateX;
     private float _rotateY;
