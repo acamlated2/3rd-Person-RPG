@@ -27,6 +27,9 @@ public class ButtonScript : MonoBehaviour
                 Debug.Log("interacting");
                 _player.GetComponent<PlayerController>().interacting = false;
                 Retract();
+
+                GameObject door = GameObject.FindGameObjectWithTag("Door");
+                door.GetComponent<DoorScript>().StartOpening();
             }
         }
     }
