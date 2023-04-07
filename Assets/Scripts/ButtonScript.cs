@@ -30,6 +30,9 @@ public class ButtonScript : MonoBehaviour
 
                 GameObject door = GameObject.FindGameObjectWithTag("Door");
                 door.GetComponent<DoorScript>().StartOpening();
+
+                GameObject cam = GameObject.FindGameObjectWithTag("Camera Manager");
+                cam.GetComponent<CameraScript>().StartDoorAnimation();
             }
         }
     }

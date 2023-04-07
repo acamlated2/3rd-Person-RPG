@@ -35,6 +35,10 @@ public class CameraScript : MonoBehaviour
 
     private Vector3 _cameraVectorPosition;
 
+    private bool _animating;
+
+    private Vector3 _defaultCameraObjectPos;
+
     private void Awake()
     {
         _player = GameObject.FindGameObjectWithTag("Player");
@@ -44,13 +48,22 @@ public class CameraScript : MonoBehaviour
         _defaultZPosition = _camera.transform.localPosition.z;
         
         _playerInputManager = FindObjectOfType<PlayerInputManager>();
+
+        _defaultCameraObjectPos = _camera.transform.position;
     }
 
     public void HandleCamera(Vector2 input)
     {
-        FollowPlayer();
-        RotateCamera(input);
-        CollideCamera();
+        if (!_animating)
+        {
+            FollowPlayer();
+            RotateCamera(input);
+            CollideCamera();
+        }
+        else
+        {
+            DoorAnimation();
+        }
     }
 
     private void FollowPlayer()
@@ -86,7 +99,7 @@ public class CameraScript : MonoBehaviour
         if (Physics.SphereCast(_cameraPivot.transform.position, _cameraCollisionRadius, dir, out hit, Mathf.Abs(targetPosition), CollisionLayers))
         {
             float distance = Vector3.Distance(_cameraPivot.transform.position, hit.point);
-            targetPosition -= -(distance - _cameraCollisionOffset);
+            targetPosition -= distance + _cameraCollisionOffset;
         }
 
         if (Mathf.Abs(targetPosition) < _minimumCollisionOffset)
@@ -94,7 +107,28 @@ public class CameraScript : MonoBehaviour
             targetPosition -= _minimumCollisionOffset;
         }
 
-        _cameraVectorPosition.z = Mathf.Lerp(_camera.transform.position.z, targetPosition, 1.0f);
+        _cameraVectorPosition.z = Mathf.Lerp(_camera.transform.position.z, targetPosition, 1f);
         _camera.transform.localPosition = _cameraVectorPosition;
+    }
+
+    public void StartDoorAnimation()
+    {
+        _animating = true;
+    }
+
+    private void DoorAnimation()
+    {
+        GameObject door = GameObject.FindGameObjectWithTag("Door");
+        Vector3 cameraPreferredPos = door.transform.GetChild(2).gameObject.transform.position;
+        Vector3 cameraPreferredLookAt = door.transform.GetChild(3).gameObject.transform.position;
+
+        Vector3 cameraCurrentPos = _camera.transform.position;
+
+        cameraCurrentPos.x = Mathf.Lerp(cameraCurrentPos.x, cameraPreferredPos.x, 0.3f);
+        cameraCurrentPos.y = Mathf.Lerp(cameraCurrentPos.y, cameraPreferredPos.y, 0.3f);
+        cameraCurrentPos.z = Mathf.Lerp(cameraCurrentPos.z, cameraPreferredPos.z, 0.3f);
+
+        _camera.transform.position = cameraCurrentPos;
+        _camera.transform.LookAt(cameraPreferredLookAt);
     }
 }

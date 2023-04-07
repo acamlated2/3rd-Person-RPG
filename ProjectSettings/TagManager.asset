@@ -10,6 +10,7 @@ TagManager:
   - PU Double Jump
   - Interaction Collider
   - Interactable
+  - Door
   layers:
   - Default
   - TransparentFX

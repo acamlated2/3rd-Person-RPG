@@ -10,7 +10,7 @@ public class DoorScript : MonoBehaviour
     private bool _opening;
 
     private float _animationTimer;
-    private float _animationTimerDefault = 5;
+    private float _animationTimerDefault = 10;
     void Awake()
     {
         _hinge = transform.GetChild(1).gameObject;
@@ -28,13 +28,12 @@ public class DoorScript : MonoBehaviour
         {
             GameObject leftPivot = transform.GetChild(0).gameObject;
             GameObject rightPivot = transform.GetChild(1).gameObject;
-            Debug.Log(_animationTimer);
             _animationTimer -= 1 * Time.deltaTime;
 
             if (_animationTimer > 0)
             {
-                leftPivot.transform.Rotate(0, -18 * Time.deltaTime, 0, Space.Self);
-                rightPivot.transform.Rotate(0, 18 * Time.deltaTime, 0, Space.Self);
+                leftPivot.transform.Rotate(0, -9 * Time.deltaTime, 0, Space.Self);
+                rightPivot.transform.Rotate(0, 9 * Time.deltaTime, 0, Space.Self);
             }
             else
             {
@@ -42,6 +41,8 @@ public class DoorScript : MonoBehaviour
                 rightPivot.transform.Rotate(0, 0, 0, Space.Self);
                 _opening = false;
             }
+
+            Debug.Log(leftPivot.transform.rotation.eulerAngles.y);
         }
     }
 
