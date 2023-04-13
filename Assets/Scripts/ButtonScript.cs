@@ -24,15 +24,19 @@ public class ButtonScript : MonoBehaviour
         {
             if (_player.GetComponent<PlayerController>().interacting)
             {
-                Debug.Log("interacting");
                 _player.GetComponent<PlayerController>().interacting = false;
                 Retract();
 
+                // open door
                 GameObject door = GameObject.FindGameObjectWithTag("Door");
                 door.GetComponent<DoorScript>().StartOpening();
 
+                // move camera
                 GameObject cam = GameObject.FindGameObjectWithTag("Camera Manager");
                 cam.GetComponent<CameraScript>().StartDoorAnimation();
+                
+                // block player input
+                _player.GetComponent<PlayerController>().inputBlocked = true;
             }
         }
     }

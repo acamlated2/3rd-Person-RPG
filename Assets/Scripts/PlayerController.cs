@@ -17,6 +17,7 @@ public class PlayerController : MonoBehaviour
     public bool doubleJumpOn = false;
     public bool jumping;
     public bool interacting;
+    public bool inputBlocked;
 
     // private
     private PlayerControls _controls;
@@ -83,21 +84,29 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // movement
-        HandleRotation();
-        HandleMovement();
-        HandleJump();
-        
-        // animation
-        HandleAnimation();
-        
         // power up
         HandlePowerUp();
         
-        // interaction
-        if (_interactinput)
+        if (!inputBlocked)
         {
-            StartInteracting();
+            // movement
+            HandleRotation();
+            HandleMovement();
+            HandleJump();
+            
+            // animation
+            HandleAnimation();
+
+            // interaction
+            if (_interactinput)
+            {
+                StartInteracting();
+            }
+        }
+        else
+        {
+            // set animation to idle
+            _animatorManager.HandleAnimator(new Vector2(0, 0), 0);
         }
     }
 

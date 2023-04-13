@@ -5,18 +5,9 @@ using UnityEngine;
 public class DoorScript : MonoBehaviour
 {
     // private
-    private GameObject _hinge;
-
     private bool _opening;
 
-    private float _animationTimer;
-    private float _animationTimerDefault = 10;
-    void Awake()
-    {
-        _hinge = transform.GetChild(1).gameObject;
-    }
 
-    
     void Update()
     {
         Animate();
@@ -28,21 +19,26 @@ public class DoorScript : MonoBehaviour
         {
             GameObject leftPivot = transform.GetChild(0).gameObject;
             GameObject rightPivot = transform.GetChild(1).gameObject;
-            _animationTimer -= 1 * Time.deltaTime;
 
-            if (_animationTimer > 0)
+            if ((leftPivot.transform.rotation.eulerAngles.y >= 270f) || 
+                (leftPivot.transform.rotation.eulerAngles.y == 0f))
             {
                 leftPivot.transform.Rotate(0, -9 * Time.deltaTime, 0, Space.Self);
                 rightPivot.transform.Rotate(0, 9 * Time.deltaTime, 0, Space.Self);
             }
+
             else
             {
-                leftPivot.transform.Rotate(0, 0, 0, Space.Self);
-                rightPivot.transform.Rotate(0, 0, 0, Space.Self);
                 _opening = false;
+                
+                // change camera back
+                GameObject cameraManager = GameObject.FindGameObjectWithTag("Camera Manager");
+                cameraManager.GetComponent<CameraScript>().StopDoorAnimation();
+                
+                // allow player to give input
+                GameObject player = GameObject.FindGameObjectWithTag("Player");
+                player.GetComponent<PlayerController>().inputBlocked = false;
             }
-
-            Debug.Log(leftPivot.transform.rotation.eulerAngles.y);
         }
     }
 
@@ -51,7 +47,6 @@ public class DoorScript : MonoBehaviour
         if (!_opening)
         {
             _opening = true;
-            _animationTimer = _animationTimerDefault;
         }
     }
 }

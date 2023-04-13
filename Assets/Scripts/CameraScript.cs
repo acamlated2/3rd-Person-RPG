@@ -10,6 +10,8 @@ public class CameraScript : MonoBehaviour
     // public
     public LayerMask CollisionLayers;
     
+    public bool Animating;
+    
     // private
     private GameObject _player;
     private GameObject _cameraPivot;
@@ -35,9 +37,11 @@ public class CameraScript : MonoBehaviour
 
     private Vector3 _cameraVectorPosition;
 
-    private bool _animating;
-
     private Vector3 _defaultCameraObjectPos;
+
+    private Transform _savedCameraTransform;
+
+    private bool _doorOpening;
 
     private void Awake()
     {
@@ -54,7 +58,7 @@ public class CameraScript : MonoBehaviour
 
     public void HandleCamera(Vector2 input)
     {
-        if (!_animating)
+        if (!Animating)
         {
             FollowPlayer();
             RotateCamera(input);
@@ -113,22 +117,58 @@ public class CameraScript : MonoBehaviour
 
     public void StartDoorAnimation()
     {
-        _animating = true;
+        Animating = true;
+        _doorOpening = true;
+    }
+
+    public void StopDoorAnimation()
+    {
+        _doorOpening = false;
     }
 
     private void DoorAnimation()
     {
-        GameObject door = GameObject.FindGameObjectWithTag("Door");
-        Vector3 cameraPreferredPos = door.transform.GetChild(2).gameObject.transform.position;
-        Vector3 cameraPreferredLookAt = door.transform.GetChild(3).gameObject.transform.position;
+        Vector3 cameraPreferredPos;
+        Vector3 cameraCurrentPos;
+        
+        // opening
+        if (_doorOpening)
+        {
+            _savedCameraTransform = _camera.transform;
 
-        Vector3 cameraCurrentPos = _camera.transform.position;
+            GameObject door = GameObject.FindGameObjectWithTag("Door");
+            cameraPreferredPos = door.transform.GetChild(2).gameObject.transform.position;
+            Vector3 cameraPreferredLookAt = door.transform.GetChild(3).gameObject.transform.position;
 
-        cameraCurrentPos.x = Mathf.Lerp(cameraCurrentPos.x, cameraPreferredPos.x, 0.3f);
-        cameraCurrentPos.y = Mathf.Lerp(cameraCurrentPos.y, cameraPreferredPos.y, 0.3f);
-        cameraCurrentPos.z = Mathf.Lerp(cameraCurrentPos.z, cameraPreferredPos.z, 0.3f);
+            cameraCurrentPos = _camera.transform.position;
 
-        _camera.transform.position = cameraCurrentPos;
-        _camera.transform.LookAt(cameraPreferredLookAt);
+            cameraCurrentPos.x = Mathf.Lerp(cameraCurrentPos.x, cameraPreferredPos.x, 0.05f);
+            cameraCurrentPos.y = Mathf.Lerp(cameraCurrentPos.y, cameraPreferredPos.y, 0.05f);
+            cameraCurrentPos.z = Mathf.Lerp(cameraCurrentPos.z, cameraPreferredPos.z, 0.05f);
+
+            _camera.transform.position = cameraCurrentPos;
+            _camera.transform.LookAt(cameraPreferredLookAt);
+        }
+        else // closing
+        {
+            cameraPreferredPos = _savedCameraTransform.position;
+            cameraCurrentPos = _camera.transform.position;
+            
+            cameraCurrentPos.x = Mathf.Lerp(cameraCurrentPos.x, cameraPreferredPos.x, 0.01f);
+            cameraCurrentPos.y = Mathf.Lerp(cameraCurrentPos.y, cameraPreferredPos.y, 0.01f);
+            cameraCurrentPos.z = Mathf.Lerp(cameraCurrentPos.z, cameraPreferredPos.z, 0.01f);
+            
+            _camera.transform.position = cameraCurrentPos;
+            _camera.transform.localRotation = Quaternion.identity;
+            
+            // stop animating
+            Animating = false;
+        }
+    }
+
+    public void ResetCamera()
+    {
+        _camera.transform.position = _savedCameraTransform.position;
+        _camera.transform.localRotation = Quaternion.identity;
     }
 }

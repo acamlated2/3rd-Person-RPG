@@ -40,6 +40,13 @@ public class AnimatorManager : MonoBehaviour
 
     public void HandleAnimator(Vector2 input, float velocityY)
     {
+        // check animation state
+        AnimatorStateInfo stateInfo = GetComponent<Animator>().GetCurrentAnimatorStateInfo(0);
+        if (stateInfo.IsName("Interact") && stateInfo.normalizedTime >= 1f)
+        {
+            GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>().interacting = false;
+        }
+
         // movement
         if (input.x > 0.1 || input.x < -0.1 || input.y > 0.1 || input.y < -0.1)
         {
