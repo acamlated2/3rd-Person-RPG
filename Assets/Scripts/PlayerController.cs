@@ -19,6 +19,8 @@ public class PlayerController : MonoBehaviour
     public bool interacting;
     public bool inputBlocked;
 
+    public bool attacking;
+
     // private
     private PlayerControls _controls;
     private Vector2 _move;
@@ -44,6 +46,8 @@ public class PlayerController : MonoBehaviour
     private float _doubleJumpTimeDefault = 5;
 
     private bool _interactinput;
+
+    private bool _attackIntput;
 
     private AnimatorManager _animatorManager;
 
@@ -71,7 +75,10 @@ public class PlayerController : MonoBehaviour
         _controls.Player.Jump.canceled += ctx => _jumpInput = false;
 
         _controls.Player.Interact.performed += ctx => _interactinput = true;
-        _controls.Player.Jump.canceled += ctx => _jumpInput = false;
+        _controls.Player.Interact.canceled += ctx => _interactinput = false;
+        
+        _controls.Player.Attack.performed += ctx => _attackIntput = true;
+        _controls.Player.Attack.canceled += ctx => _attackIntput = false;
 
         _cameraManager = GameObject.FindGameObjectWithTag("Camera Manager");
         _camera = GameObject.FindGameObjectWithTag("MainCamera");
@@ -101,6 +108,12 @@ public class PlayerController : MonoBehaviour
             if (_interactinput)
             {
                 StartInteracting();
+            }
+            
+            // attack
+            if (_attackIntput)
+            {
+                StartAttack();
             }
         }
         else
@@ -241,7 +254,6 @@ public class PlayerController : MonoBehaviour
 
     private void HandleAnimation()
     {
-        //_moveAmount = Mathf.Clamp01(Mathf.Abs(_move.x) + Mathf.Abs(_move.y));
         _animatorManager.HandleAnimator(_move, GetComponent<Rigidbody>().velocity.y);
     }
 
@@ -250,5 +262,17 @@ public class PlayerController : MonoBehaviour
         _interactinput = false;
         _animatorManager.Interact();
         interacting = true;
+    }
+
+    private void StartAttack()
+    {
+        _attackIntput = false;
+        _animatorManager.Attack();
+        
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (var enemy in enemies)
+        {
+            enemy.GetComponent<EnemyScript>().Attack();
+        }
     }
 }

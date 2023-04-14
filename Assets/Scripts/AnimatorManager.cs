@@ -20,6 +20,8 @@ public class AnimatorManager : MonoBehaviour
 
     private int _interact; // trigger
 
+    private int _attack; // trigger
+
     private void Awake()
     {
         _animator = GetComponent<Animator>();
@@ -29,6 +31,7 @@ public class AnimatorManager : MonoBehaviour
         _jump = Animator.StringToHash("Jump");
         _yVelocity = Animator.StringToHash("YVelocity");
         _interact = Animator.StringToHash("Interact");
+        _attack = Animator.StringToHash("Attack");
 
     }
 
@@ -45,6 +48,11 @@ public class AnimatorManager : MonoBehaviour
         if (stateInfo.IsName("Interact") && stateInfo.normalizedTime >= 1f)
         {
             GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>().interacting = false;
+        }
+
+        if (stateInfo.IsName("Attack") && stateInfo.normalizedTime >= 1f)
+        {
+            GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>().attacking = false;
         }
 
         // movement
@@ -71,5 +79,10 @@ public class AnimatorManager : MonoBehaviour
     public void Interact()
     {
         _animator.SetTrigger(_interact);
+    }
+
+    public void Attack()
+    {
+        _animator.SetTrigger(_attack);
     }
 }
