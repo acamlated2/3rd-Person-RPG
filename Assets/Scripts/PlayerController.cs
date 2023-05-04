@@ -47,9 +47,17 @@ public class PlayerController : MonoBehaviour
 
     private bool _interactinput;
 
-    private bool _attackIntput;
+    private bool _attackInput;
+
+    private bool _lockCameraInput;
 
     private AnimatorManager _animatorManager;
+
+    private GameObject _gameController;
+
+    private GameObject _splineController;
+    private float _currentSplineTime;
+    private GameObject _splineAnchor;
 
     private void OnEnable()
     {
@@ -77,8 +85,11 @@ public class PlayerController : MonoBehaviour
         _controls.Player.Interact.performed += ctx => _interactinput = true;
         _controls.Player.Interact.canceled += ctx => _interactinput = false;
         
-        _controls.Player.Attack.performed += ctx => _attackIntput = true;
-        _controls.Player.Attack.canceled += ctx => _attackIntput = false;
+        _controls.Player.Attack.performed += ctx => _attackInput = true;
+        _controls.Player.Attack.canceled += ctx => _attackInput = false;
+        
+        _controls.Player.LockCamera.performed += ctx => _lockCameraInput = true;
+        _controls.Player.LockCamera.canceled += ctx => _lockCameraInput = false;
 
         _cameraManager = GameObject.FindGameObjectWithTag("Camera Manager");
         _camera = GameObject.FindGameObjectWithTag("MainCamera");
@@ -87,6 +98,11 @@ public class PlayerController : MonoBehaviour
 
         _speedBoosts = GameObject.FindGameObjectsWithTag("PU Speed Boost");
         _doubleJumps = GameObject.FindGameObjectsWithTag("PU Double Jump");
+        
+        _gameController = GameObject.FindGameObjectWithTag("GameController");
+        
+        _splineController = GameObject.FindGameObjectWithTag("Spline");
+        _splineAnchor = GameObject.FindGameObjectWithTag("Spline Player Anchor");
     }
 
     private void FixedUpdate()
@@ -111,9 +127,15 @@ public class PlayerController : MonoBehaviour
             }
             
             // attack
-            if (_attackIntput)
+            if (_attackInput)
             {
                 StartAttack();
+            }
+            
+            // camera locking
+            if (_lockCameraInput)
+            {
+                LockCameraToEnemy();
             }
         }
         else
@@ -125,10 +147,25 @@ public class PlayerController : MonoBehaviour
 
     private void HandleMovement()
     {
-        _moveDirection = _camera.transform.forward * _move.y;
-        _moveDirection += _camera.transform.right * _move.x;
-        _moveDirection.Normalize();
-        _moveDirection.y = 0;
+        if (!_gameController.GetComponent<GameControllerScript>().splineMode) // normal movement
+        {
+            _moveDirection = _camera.transform.forward * _move.y;
+            _moveDirection += _camera.transform.right * _move.x;
+            _moveDirection.Normalize();
+            _moveDirection.y = 0;
+        }
+        else // spline movement
+        {
+            _moveDirection = transform.forward * _move.x;
+            _moveDirection.Normalize();
+            _moveDirection.y = 0;
+
+            if (_splineController.GetComponent<SplineScript>()._splineRunning)
+            {
+                _splineController.GetComponent<SplineScript>().time = _splineController.GetComponent<SplineScript>()
+                    .GetNearestSplineTime(transform.position);
+            }
+        }
 
         Vector3 movementVelocity = _moveDirection * movementSpeed * _speedBoostMultiplier;
         transform.Translate(movementVelocity * Time.deltaTime, Space.World);
@@ -136,21 +173,32 @@ public class PlayerController : MonoBehaviour
 
     private void HandleRotation()
     {
-        Vector3 targetDirection = Vector3.zero;
-        targetDirection = _camera.transform.forward * _move.y;
-        targetDirection += _camera.transform.right * _move.x;
-        targetDirection.Normalize();
-        targetDirection.y = 0;
-
-        if (targetDirection == Vector3.zero)
+        if (!_gameController.GetComponent<GameControllerScript>().splineMode)
         {
-            targetDirection = transform.forward;
+            Vector3 targetDirection = Vector3.zero;
+            targetDirection = _camera.transform.forward * _move.y;
+            targetDirection += _camera.transform.right * _move.x;
+            targetDirection.Normalize();
+            targetDirection.y = 0;
+
+            if (targetDirection == Vector3.zero)
+            {
+                targetDirection = transform.forward;
+            }
+
+            Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
+            Quaternion playerRotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+
+            transform.rotation = playerRotation;
         }
-
-        Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
-        Quaternion playerRotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-
-        transform.rotation = playerRotation;
+        else
+        {
+            Vector3 splineDirection = _splineAnchor.transform.forward;
+            splineDirection.y = 0f;
+            Quaternion targetRotation = Quaternion.LookRotation(splineDirection, Vector3.up);
+            Quaternion playerRotation = Quaternion.Slerp(transform.rotation, targetRotation, 1);
+            transform.rotation = playerRotation;
+        }
     }
 
     private void LateUpdate()
@@ -266,7 +314,7 @@ public class PlayerController : MonoBehaviour
 
     private void StartAttack()
     {
-        _attackIntput = false;
+        _attackInput = false;
         _animatorManager.Attack();
         
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
@@ -274,5 +322,11 @@ public class PlayerController : MonoBehaviour
         {
             enemy.GetComponent<EnemyScript>().Attack();
         }
+    }
+
+    private void LockCameraToEnemy()
+    {
+        _lockCameraInput = false;
+        _cameraManager.GetComponent<CameraScript>().LockToEnemy();
     }
 }

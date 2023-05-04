@@ -11,6 +11,11 @@ TagManager:
   - Interaction Collider
   - Interactable
   - Door
+  - Chase Collider
+  - Vulnerability Collider
+  - Enemy
+  - Spline Camera Anchor
+  - Spline Player Anchor
   layers:
   - Default
   - TransparentFX

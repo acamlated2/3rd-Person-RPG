@@ -43,11 +43,21 @@ public class CameraScript : MonoBehaviour
 
     private bool _doorOpening;
 
+    private bool _lockedToEnemy;
+    private GameObject _lockedEnemy;
+    private int _lockedEnemyIndex;
+
+    private GameObject _splineAnchor;
+
+    private GameObject _gameController;
+
     private void Awake()
     {
         _player = GameObject.FindGameObjectWithTag("Player");
         _cameraPivot = GameObject.FindGameObjectWithTag("Camera Pivot");
         _camera = GameObject.FindGameObjectWithTag("MainCamera");
+        _splineAnchor = GameObject.FindGameObjectWithTag("Spline Camera Anchor");
+        _gameController = GameObject.FindGameObjectWithTag("GameController");
 
         _defaultZPosition = _camera.transform.localPosition.z;
         
@@ -58,15 +68,22 @@ public class CameraScript : MonoBehaviour
 
     public void HandleCamera(Vector2 input)
     {
-        if (!Animating)
+        if (!_gameController.GetComponent<GameControllerScript>().splineMode)
         {
-            FollowPlayer();
-            RotateCamera(input);
-            CollideCamera();
+            if (!Animating)
+            {
+                FollowPlayer();
+                RotateCamera(input);
+                CollideCamera();
+            }
+            else
+            {
+                DoorAnimation();
+            }
         }
         else
         {
-            DoorAnimation();
+            HandleSplineMode();
         }
     }
 
@@ -166,9 +183,39 @@ public class CameraScript : MonoBehaviour
         }
     }
 
-    public void ResetCamera()
+    public void LockToEnemy()
     {
-        _camera.transform.position = _savedCameraTransform.position;
-        _camera.transform.localRotation = Quaternion.identity;
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        if (!_lockedToEnemy)
+        {
+            _lockedEnemy = enemies[0];
+            _camera.transform.LookAt(enemies[0].transform);
+        }
+        else
+        {
+            for (int i = 0; i < enemies.Length; i++)
+            {
+                if (_lockedEnemy == enemies[i])
+                {
+                    _lockedEnemyIndex = i + 1;
+                    if (_lockedEnemyIndex > enemies.Length)
+                    {
+                        _lockedEnemyIndex = 0;
+                        _lockedToEnemy = false;
+                        _camera.transform.localRotation = Quaternion.identity;
+                        return;
+                    }
+                    
+                    _lockedEnemy = enemies[_lockedEnemyIndex].gameObject;
+                    _camera.transform.LookAt(_lockedEnemy.transform);
+                }
+            }
+        }
+    }
+    
+    private void HandleSplineMode()
+    {
+        _camera.transform.position = _splineAnchor.transform.position;
+        _camera.transform.LookAt(_player.transform);
     }
 }
